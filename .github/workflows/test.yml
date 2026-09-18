@@ -25,8 +25,11 @@ jobs:
         with:
           repository: AssistOS-AI/AchillesAgentLib
           path: achillesAgentLib
-      - name: Provide the bundled PostgreSQL identity used by the runtime scripts
-        run: id -u postgres >/dev/null 2>&1 || useradd --system --create-home --home-dir /var/lib/postgresql postgres
+      - name: Provide the bundled service identities used by the runtime scripts
+        run: |
+          for user in postgres redis rabbitmq; do
+            id -u "$user" >/dev/null 2>&1 || useradd --system --user-group --create-home --home-dir "/var/lib/$user" "$user"
+          done
       - name: Run agent tests
         working-directory: OnlyOfficeAgent/onlyOffice
         env:
