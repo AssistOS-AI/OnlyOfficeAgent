@@ -1,10 +1,29 @@
 import assert from 'node:assert/strict';
 import { EventEmitter, once } from 'node:events';
+import fs from 'node:fs';
 import http from 'node:http';
 import net from 'node:net';
+import os from 'node:os';
+import path from 'node:path';
 import test from 'node:test';
 
 import { startDocumentServerProcess, startOnlyOfficeAgent } from '../src/index.mjs';
+import { createSessionStore } from '../src/session-store.mjs';
+
+// The runtime's contract state file lives in the container's /root. Tests must
+// never read or write it on the host or inside a live agent container.
+function isolatedSessionStore(t) {
+  const directory = fs.mkdtempSync(path.join(os.tmpdir(), 'onlyoffice-runtime-'));
+  t.after(() => fs.rmSync(directory, { recursive: true, force: true }));
+  const calls = [];
+  return {
+    calls,
+    create(options) {
+      calls.push(options);
+      return createSessionStore({ ...options, stateFile: path.join(directory, 'onlyoffice-sessions-v5.json') });
+    },
+  };
+}
 
 function createServerFactory() {
   const records = [];
@@ -64,7 +83,8 @@ test('DocumentServer owns a process group that is signalled as one during shutdo
   assert.deepEqual(calls[1], { pid: -4242, signal: 'SIGTERM' });
 });
 
-test('onlyoffice agent runtime starts control storage and editor listeners with separated ports', async () => {
+test('onlyoffice agent runtime starts control storage and editor listeners with separated ports', async (t) => {
+  const sessions = isolatedSessionStore(t);
   const env = {
     ONLYOFFICE_JWT_SECRET: 'jwt-secret',
     ONLYOFFICE_CONTROL_PORT: '17000',
@@ -91,6 +111,7 @@ test('onlyoffice agent runtime starts control storage and editor listeners with 
   const runtime = await startOnlyOfficeAgent({
     env,
     assertImageContract() {},
+    createSessionStore: sessions.create,
     createHttpServer: serverFactory.createHttpServer,
     createControlRouteHandler(args) {
       calls.control = args;
@@ -147,6 +168,9 @@ test('onlyoffice agent runtime starts control storage and editor listeners with 
     dpuStore: { kind: 'dpu-store' },
   });
   assert.equal(calls.dpu.createAgentClient.name, 'createAgentClient');
+  assert.equal(sessions.calls.length, 1);
+  assert.equal(sessions.calls[0].stateFile, '/root/state/onlyoffice-sessions-v5.json',
+    'production wiring keeps the single runtime contract state location');
 
   await runtime.stop();
 
@@ -154,13 +178,15 @@ test('onlyoffice agent runtime starts control storage and editor listeners with 
   assert.equal(serverFactory.records.every((record) => record.closed), true);
 });
 
-test('onlyoffice agent runtime requires an explicit workspace root', async () => {
+test('onlyoffice agent runtime requires an explicit workspace root', async (t) => {
+  const sessions = isolatedSessionStore(t);
   await assert.rejects(
     () => startOnlyOfficeAgent({
       env: {
         ONLYOFFICE_JWT_SECRET: 'jwt-secret',
       },
       assertImageContract() {},
+      createSessionStore: sessions.create,
       createWorkspaceStore() {
         throw new Error('workspace root fallback was used');
       },
@@ -172,7 +198,8 @@ test('onlyoffice agent runtime requires an explicit workspace root', async () =>
   );
 });
 
-test('failed drain keeps storage and DocumentServer alive and reports failure', async () => {
+test('failed drain keeps storage and DocumentServer alive and reports failure', async (t) => {
+  const sessions = isolatedSessionStore(t);
   const serverFactory = createServerFactory();
   let documentServerStops = 0;
   const runtime = await startOnlyOfficeAgent({
@@ -181,6 +208,7 @@ test('failed drain keeps storage and DocumentServer alive and reports failure', 
       PLOINKY_WORKSPACE_ROOT: '/tmp/workspace',
     },
     assertImageContract() {},
+    createSessionStore: sessions.create,
     createHttpServer: serverFactory.createHttpServer,
     createControlRouteHandler: () => () => true,
     createStorageRouteHandler: () => () => true,
@@ -206,7 +234,8 @@ test('failed drain keeps storage and DocumentServer alive and reports failure', 
   assert.equal(documentServerStops, 0, 'DocumentServer remains live for a retry');
 });
 
-test('active editor socket cannot block force-save drain before targeted restart', async () => {
+test('active editor socket cannot block force-save drain before targeted restart', async (t) => {
+  const sessions = isolatedSessionStore(t);
   const records = [];
   const activeSocket = Object.assign(new EventEmitter(), {
     destroyed: false,
@@ -230,6 +259,7 @@ test('active editor socket cannot block force-save drain before targeted restart
       PLOINKY_WORKSPACE_ROOT: '/tmp/workspace',
     },
     assertImageContract() {},
+    createSessionStore: sessions.create,
     createHttpServer(handler) {
       const emitter = new EventEmitter();
       const index = records.length;
@@ -301,7 +331,8 @@ test('active editor socket cannot block force-save drain before targeted restart
   assert.equal(records[2].closeFinished, true);
 });
 
-test('failed graceful editor shutdown retains storage and DocumentServer and can retry without reclosing listeners', async () => {
+test('failed graceful editor shutdown retains storage and DocumentServer and can retry without reclosing listeners', async (t) => {
+  const sessions = isolatedSessionStore(t);
   const serverFactory = createServerFactory();
   const activeSocket = Object.assign(new EventEmitter(), {
     destroyed: false,
@@ -312,6 +343,7 @@ test('failed graceful editor shutdown retains storage and DocumentServer and can
   const runtime = await startOnlyOfficeAgent({
     env: { ONLYOFFICE_JWT_SECRET: 'jwt-secret', PLOINKY_WORKSPACE_ROOT: '/tmp/workspace' },
     assertImageContract() {},
+    createSessionStore: sessions.create,
     createHttpServer: serverFactory.createHttpServer,
     createControlRouteHandler: () => () => true,
     createStorageRouteHandler: () => () => true,
@@ -347,13 +379,15 @@ test('failed graceful editor shutdown retains storage and DocumentServer and can
   assert.equal(serverFactory.records[1].closed, true);
 });
 
-test('partial editor HTTP requests close after graceful drain and before DocumentServer teardown', { timeout: 5_000 }, async () => {
+test('partial editor HTTP requests close after graceful drain and before DocumentServer teardown', { timeout: 5_000 }, async (t) => {
+  const sessions = isolatedSessionStore(t);
   let acceptedSocket;
   let drained = false;
   let documentServerStopped = false;
   const runtime = await startOnlyOfficeAgent({
     env: { ONLYOFFICE_JWT_SECRET: 'jwt-secret', PLOINKY_WORKSPACE_ROOT: '/tmp/workspace' },
     assertImageContract() {},
+    createSessionStore: sessions.create,
     createHttpServer(handler) {
       const server = http.createServer(handler);
       const bind = server.listen.bind(server);

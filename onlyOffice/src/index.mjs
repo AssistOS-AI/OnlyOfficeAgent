@@ -14,7 +14,7 @@ import { disconnectOnlyOfficeEditors as defaultDisconnectOnlyOfficeEditors } fro
 import { createEditorProxy as defaultCreateEditorProxy } from './proxy/editor-proxy.mjs';
 import { createControlRouteHandler as defaultCreateControlRouteHandler } from './routes/control.mjs';
 import { createStorageRouteHandler as defaultCreateStorageRouteHandler } from './routes/storage.mjs';
-import { createSessionStore } from './session-store.mjs';
+import { createSessionStore as defaultCreateSessionStore } from './session-store.mjs';
 import { createDpuStore as defaultCreateDpuStore } from './storage/dpu-store.mjs';
 import { createStorageRouter as defaultCreateStorageRouter } from './storage/router.mjs';
 import { createWorkspaceStore as defaultCreateWorkspaceStore } from './storage/workspace-store.mjs';
@@ -427,6 +427,7 @@ export async function startOnlyOfficeAgent({
   createHttpServer = http.createServer,
   createControlRouteHandler = defaultCreateControlRouteHandler,
   createStorageRouteHandler = defaultCreateStorageRouteHandler,
+  createSessionStore = defaultCreateSessionStore,
   createWorkspaceStore = defaultCreateWorkspaceStore,
   createDpuStore = defaultCreateDpuStore,
   createStorageRouter = defaultCreateStorageRouter,
