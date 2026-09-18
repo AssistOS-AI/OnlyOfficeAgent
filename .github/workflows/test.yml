@@ -7,9 +7,9 @@ on:
 
 jobs:
   onlyoffice-tests:
+    # Unprivileged runner, like a developer machine: the tests are hermetic and
+    # must not depend on root or on the Document Server image's service users.
     runs-on: ubuntu-latest
-    container:
-      image: node:20
     steps:
       - name: Check out the agent repository
         uses: actions/checkout@v4
@@ -25,11 +25,11 @@ jobs:
         with:
           repository: AssistOS-AI/AchillesAgentLib
           path: achillesAgentLib
-      - name: Provide the bundled service identities used by the runtime scripts
-        run: |
-          for user in postgres redis rabbitmq; do
-            id -u "$user" >/dev/null 2>&1 || useradd --system --user-group --create-home --home-dir "/var/lib/$user" "$user"
-          done
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          # Matches the Node runtime baked into docker.io/assistos/onlyoffice-agent.
+          node-version: 24
       - name: Run agent tests
         working-directory: OnlyOfficeAgent/onlyOffice
         env:
