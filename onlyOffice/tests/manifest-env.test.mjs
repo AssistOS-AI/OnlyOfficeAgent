@@ -317,9 +317,31 @@ test('manifest delegates Confidential storage to the deployed dpuAgent principal
   const targets = (route.delegations || []).map((entry) => entry?.targetAgentId);
   assert.deepEqual(
     targets,
-    ['agent:./dpuAgent'],
-    'delegation target must use same-repo "." so the manifest is portable across repo installs'
+    ['agent:AchillesIDE/dpuAgent'],
+    "the extracted agent must name Explorer's installed dpuAgent absolutely because both live in different repositories"
   );
+});
+
+test('every delegation target is an absolute agent principal', () => {
+  const manifest = readManifest();
+  const targets = (manifest.routerAccess?.httpRoutes || [])
+    .flatMap((route) => route.delegations || [])
+    .map((entry) => entry?.targetAgentId);
+
+  assert.ok(targets.length > 0, 'at least one delegation target is declared');
+  for (const target of targets) {
+    assert.equal(typeof target, 'string', 'delegation target must be a string');
+    assert.doesNotMatch(
+      target,
+      /^agent:\.\//,
+      `delegation target ${target} uses same-repo syntax and cannot resolve from another repository`
+    );
+    assert.match(
+      target,
+      /^agent:[^/]+\/[^/]+$/,
+      `delegation target ${target} must name an absolute agent:<repo>/<agent> principal`
+    );
+  }
 });
 
 test('onlyoffice control route uses authenticated Ploinky access policy', () => {
@@ -330,10 +352,10 @@ test('onlyoffice control route uses authenticated Ploinky access policy', () => 
   assert.equal(route?.access, 'authenticated');
 });
 
-test('onlyoffice delegation targets dpuAgent in the same repo via "." with an explicit key', () => {
+test('onlyoffice delegation targets the absolute Explorer dpuAgent principal with an explicit key', () => {
   const manifest = JSON.parse(fs.readFileSync(new URL('../manifest.json', import.meta.url)));
   const delegation = manifest.routerAccess.httpRoutes[0].delegations[0];
-  assert.equal(delegation.targetAgentId, 'agent:./dpuAgent');
+  assert.equal(delegation.targetAgentId, 'agent:AchillesIDE/dpuAgent');
   assert.equal(delegation.key, 'dpuConfidential');
 });
 

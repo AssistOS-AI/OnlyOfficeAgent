@@ -29,7 +29,7 @@
         "delegations": [
         {
           "key": "dpuConfidential",
-          "targetAgentId": "agent:./dpuAgent",
+          "targetAgentId": "agent:AchillesIDE/dpuAgent",
           "tools": [
             "dpu_workspace_roots",
             "dpu_confidential_list",

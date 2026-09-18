@@ -1,0 +1,34 @@
+name: test
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  onlyoffice-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out the agent repository
+        uses: actions/checkout@v4
+        with:
+          path: OnlyOfficeAgent
+      - name: Check out the Ploinky runtime libraries
+        uses: actions/checkout@v4
+        with:
+          repository: AssistOS-AI/ploinky
+          path: ploinky
+      - name: Check out AchillesAgentLib
+        uses: actions/checkout@v4
+        with:
+          repository: AssistOS-AI/AchillesAgentLib
+          path: achillesAgentLib
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Run agent tests
+        working-directory: OnlyOfficeAgent/onlyOffice
+        env:
+          PLOINKY_AGENTLIB_DIR: ${{ github.workspace }}/achillesAgentLib
+        run: npm test

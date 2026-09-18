@@ -49,6 +49,8 @@ document.addEventListener('DOMContentLoaded', async () => {
   if (document.querySelector('#site-header')) jobs.push(loadPartial('#site-header', 'partials/header.html'));
   if (document.querySelector('#site-footer')) jobs.push(loadPartial('#site-footer', 'partials/footer.html'));
   await Promise.all(jobs);
-  (await import('../../docs/documentation-breadcrumb.js')).initializeDocumentationBreadcrumb('OnlyOffice');
+  (await import('./documentation-breadcrumb.js')).initializeDocumentationBreadcrumb('OnlyOffice', {
+    overviewHref: 'https://assistos-ai.github.io/AssistOSExplorer/docs/index.html',
+  });
   initializeMenus();
 });

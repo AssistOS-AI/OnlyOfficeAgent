@@ -6,10 +6,12 @@ OnlyOffice owns the runtime boundary for the workspace OnlyOffice Document Serve
 
 ## Mandatory Reading Order
 
-1. Read the nearest parent `AGENTS.md` for workspace-wide rules.
+1. Read the repository root `CLAUDE.md` for repository-wide rules.
 2. Read `docs/index.html` for the local documentation entry point.
 3. Read `docs/specs/matrix.md` and `docs/specs/DS001-coding-style.md` before changing runtime ownership, manifests, hooks, secrets, ports, readiness, storage, or Explorer integration.
-4. Read `../docs/specs/DS007-onlyoffice.md` and `../docs/specs/DS002-ploinky-runtime.md` before changing Explorer-facing Office behavior.
+4. Read Explorer's `DS007-onlyoffice.md` and `DS002-ploinky-runtime.md` by GitHub URL before changing Explorer-facing Office behavior:
+   - https://github.com/AssistOS-AI/AssistOSExplorer/blob/main/docs/specs/DS007-onlyoffice.md
+   - https://github.com/AssistOS-AI/AssistOSExplorer/blob/main/docs/specs/DS002-ploinky-runtime.md
 
 ## Repository Rules
 
@@ -25,11 +27,12 @@ OnlyOffice owns the runtime boundary for the workspace OnlyOffice Document Serve
 - `manifest.json`
 - `scripts/hooks/preinstall.sh`
 - `docs/specs/DS001-coding-style.md`
-- `../docs/specs/DS007-onlyoffice.md`
-- `../docs/specs/DS002-ploinky-runtime.md`
+- Explorer `docs/specs/DS007-onlyoffice.md` (GitHub URL above)
+- Explorer `docs/specs/DS002-ploinky-runtime.md` (GitHub URL above)
 
 ## Validation
 
 At minimum, validate without printing secrets that the Ploinky agent owns the Document Server container, Explorer and Document Server agree on the JWT secret, `api.js` loads, tokenized document routes work, callbacks work, and Confidential Office files flow through `Explorer -> public Router -> OnlyOffice -> private Router -> dpuAgent`.
 
+- Run `npm test` in this directory. It requires the checkout to sit next to a `ploinky/` checkout, because `tests/control-route.test.mjs` imports the Ploinky `Agent/lib/*` modules by relative path, and it requires `PLOINKY_AGENTLIB_DIR` to point at an AchillesAgentLib checkout: `PLOINKY_AGENTLIB_DIR=<path-to-achillesAgentLib> npm test`.
 - Security e2e (cross-user Confidential denial, internal-route isolation, editor allow-list) live in `tests/e2e/` and are skipped unless run against a live runtime: `ONLYOFFICE_E2E=1 ONLYOFFICE_E2E_ROUTER_BASE_URL=<url> ONLYOFFICE_E2E_AUTH_COOKIE=<cookie> npm test`. Run them in the deployment/CI lane on any routing, proxy, or delegation change. The fast unit test `tests/dpu-store-acl.test.mjs` characterizes the agent-side `contentVisible` ACL reliance without a runtime.

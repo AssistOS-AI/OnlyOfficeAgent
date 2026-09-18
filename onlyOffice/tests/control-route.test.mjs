@@ -8,7 +8,7 @@ import { computeRchHttp } from '../../../ploinky/Agent/lib/requestHash.mjs';
 import { createControlRouteHandler } from '../src/routes/control.mjs';
 import { createDpuStore } from '../src/storage/dpu-store.mjs';
 
-const AGENT_ID = 'agent:AssistOSExplorer/onlyOffice';
+const AGENT_ID = 'agent:OnlyOfficeAgent/onlyOffice';
 const AGENT_SECRET = crypto.randomBytes(32);
 const AGENT_SECRET_HEX = AGENT_SECRET.toString('hex');
 const EMPTY_BODY_HASH = crypto.createHash('sha256').update(Buffer.alloc(0)).digest('base64url');
