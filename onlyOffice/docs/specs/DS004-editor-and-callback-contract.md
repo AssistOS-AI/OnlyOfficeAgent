@@ -21,6 +21,4 @@ Confidential paths must use the Router-minted [dpuConfidential delegation](wiki.
 
 Public editor assets include only validated `/dictionaries/<language>/<name>.dic` and `.aff` requests for spellcheck; mutation methods, directory listings, other extensions, and traversal remain denied. Signed `editorConfig.customization.plugins` is false because this integration does not provide third-party editor plugins or their independent inference providers.
 
-## Conclusion
-
 Short-lived body-bound JWTs, exact forwarding validation, and delegated storage keep the editor transport from becoming a general credential or filesystem proxy.

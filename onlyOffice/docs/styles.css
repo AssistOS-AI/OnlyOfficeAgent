@@ -15,6 +15,13 @@
   line-height: 1.65;
 }
 
+
+.doc-layout { display: block; }
+.documentation-map { width: 100%; border-collapse: separate; border-spacing: .75rem; }
+.documentation-map th, .documentation-map td { border: 0; background: transparent; padding: .5rem; vertical-align: top; }
+.documentation-map a, .documentation-map span { display: block; }
+.documentation-map a { margin-bottom: .25rem; }
+@media (max-width: 700px) { .documentation-map { display: block; overflow-x: auto; } }
 .breadcrumbs {
     display: flex;
     flex-wrap: wrap;

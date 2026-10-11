@@ -3,8 +3,7 @@
 <head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>OnlyOffice Documentation - Integrations</title><link rel="stylesheet" href="styles.css"><script type="module">import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs'; mermaid.initialize({ startOnLoad: true, theme: 'neutral' });</script></head>
 <body>
   <div id="site-header"></div>
-  <main class="content content--with-sidebar"><div class="doc-layout">
-    <aside class="doc-sidebar" aria-label="OnlyOffice documentation navigation"><div class="doc-sidebar__group"><p class="doc-sidebar__group-title">Documentation</p><nav><a href="index.html">Overview</a><a href="architecture.html">Architecture</a><a href="execution-workflow.html">Execution workflow</a><a href="integrations.html" aria-current="page">Integrations</a><a href="configuration.html">Configuration</a></nav></div></aside>
+  <main class="content"><div class="doc-layout">
     <div class="doc-main">
       <p class="breadcrumbs"><a href="index.html">Documentation</a> / Integrations</p><section class="lead"><h1>Integrations</h1><p>OnlyOffice coordinates <a href="wiki.html#definition-explorer">Explorer</a>, DocumentServer, DPU, and the Ploinky Router without transferring storage ownership or authenticated browser credentials to the public editor route.</p></section>
       <section><h2>Explorer And DocumentServer</h2><p>Explorer opens Office documents through the authenticated control route and uses the returned session configuration to load the public editor transport. Browser Authorization headers, cookies, and unrelated credentials are not forwarded to <a href="wiki.html#definition-documentserver">DocumentServer</a>.</p></section>

@@ -39,6 +39,4 @@ Each session must resolve the current immutable [topology generation](wiki.html#
 
 DocumentServer startup fixes `PLUGINS_ENABLED=false` to prevent the upstream background plugin updater from changing the pinned asset bundle. Before an editor becomes ready in Explorer, its versioned immutable status SVG is loaded while the owner route is active. The browser may then render native disconnect warnings from cache after route retirement without opening inactive routes.
 
-## Conclusion
-
 The runtime contract makes service activation and session generation explicit and fails closed when the expected pinned topology is not present.

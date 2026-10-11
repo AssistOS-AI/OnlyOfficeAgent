@@ -15,6 +15,4 @@ The Node.js service must use ES modules, explicit asynchronous error handling, g
 
 Secrets must come from [Ploinky](wiki.html#definition-ploinky)-generated environment values and must not appear in logs, browser state, callback URLs, or documentation examples. [AchillesAgentLib](wiki.html#definition-achilles-agent-lib) use is authorized when supplied by the runtime; any [large language model](wiki.html#definition-llm) interaction must use the configured `LLMAgent` class with environment configuration and repository-level manual overrides. The OnlyOffice product contract defines no LLM feature.
 
-## Conclusion
-
 Guarded storage, short-lived credentials, and focused tests preserve the editor boundary.

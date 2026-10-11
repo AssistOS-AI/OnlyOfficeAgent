@@ -1,5 +1,39 @@
-# Pointer
+# OnlyOffice Agent Guide
 
-The canonical instructions for this directory live in `CLAUDE.md` (same folder).
+## Scope
 
-Please read [CLAUDE.md](./CLAUDE.md). Workspace policy (CLAUDE.md is canonical, AGENTS.md is a stub) keeps the two files from drifting and reduces context cost for tools that read both.
+OnlyOffice owns the runtime boundary for the workspace OnlyOffice Document Server integration. The implementation is a Ploinky-managed agent (`manifest.json`); the previous raw host-managed Document Server container is unsupported by runtime contract v5. Before v5 activation, an operator must explicitly stop and remove that deployment and remove its plaintext state. This agent's preinstall hook only initializes new v5 data directories: it never inspects, imports, stops, deletes, rewrites, or migrates legacy state.
+
+## Mandatory Reading Order
+
+1. Read the repository root `AGENTS.md` for repository-wide rules.
+2. Read `docs/index.html` for the local documentation entry point.
+3. Read `docs/specs/matrix.md` and `docs/specs/DS001-coding-style.md` before changing runtime ownership, manifests, hooks, secrets, ports, readiness, storage, or Explorer integration.
+4. Read Explorer's `DS007-onlyoffice.md` and `DS002-ploinky-runtime.md` by GitHub URL before changing Explorer-facing Office behavior:
+   - https://github.com/AssistOS-AI/AssistOSExplorer/blob/main/docs/specs/DS007-onlyoffice.md
+   - https://github.com/AssistOS-AI/AssistOSExplorer/blob/main/docs/specs/DS002-ploinky-runtime.md
+
+## Repository Rules
+
+- The DS specifications are the source of truth for local contracts and invariants.
+- `docs/wiki.html` is the canonical terminology source. Header submenus are the primary documentation navigation; `docs/index.html` mirrors them in its Documentation Map. Specifications use exactly `title` and `summary` frontmatter fields, with the filename stem as the title, and only `Introduction` and `Core Content` as top-level sections. Preserve substantive rationale inside `Core Content` and keep prose unwrapped.
+- OnlyOffice Document Server is owned by the Ploinky `onlyOffice` agent declared in `manifest.json`.
+- OnlyOfficeAgent is the office-session, document/callback, and storage bridge; Explorer is the IDE shell and document picker.
+- Keep generated secrets derived through Ploinky runtime contracts and never log JWT secrets, document tokens, callback tokens, or file contents.
+- This `AGENTS.md` is the single local instruction file for every coding agent;
+  do not add a `CLAUDE.md`.
+
+## Key Paths
+
+- `manifest.json`
+- `scripts/hooks/preinstall.sh`
+- `docs/specs/DS001-coding-style.md`
+- Explorer `docs/specs/DS007-onlyoffice.md` (GitHub URL above)
+- Explorer `docs/specs/DS002-ploinky-runtime.md` (GitHub URL above)
+
+## Validation
+
+At minimum, validate without printing secrets that the Ploinky agent owns the Document Server container, Explorer and Document Server agree on the JWT secret, `api.js` loads, tokenized document routes work, callbacks work, and Confidential Office files flow through `Explorer -> public Router -> OnlyOffice -> private Router -> dpuAgent`.
+
+- Run `npm test` in this directory. It requires the checkout to sit next to a `ploinky/` checkout, because `tests/control-route.test.mjs` imports the Ploinky `Agent/lib/*` modules by relative path, and it requires `PLOINKY_AGENTLIB_DIR` to point at an AchillesAgentLib checkout: `PLOINKY_AGENTLIB_DIR=<path-to-achillesAgentLib> npm test`.
+- Security e2e (cross-user Confidential denial, internal-route isolation, editor allow-list) live in `tests/e2e/` and are skipped unless run against a live runtime: `ONLYOFFICE_E2E=1 ONLYOFFICE_E2E_ROUTER_BASE_URL=<url> ONLYOFFICE_E2E_AUTH_COOKIE=<cookie> npm test`. Run them in the deployment/CI lane on any routing, proxy, or delegation change. The fast unit test `tests/dpu-store-acl.test.mjs` characterizes the agent-side `contentVisible` ACL reliance without a runtime.
